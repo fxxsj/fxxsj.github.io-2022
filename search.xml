@@ -15,6 +15,25 @@
     </entry>
     
     
+    
+    <entry>
+      <title>Hexo博客多端同步问题</title>
+      <link href="/2022/07/28/my-first-blog/"/>
+      <url>/2022/07/28/my-first-blog/</url>
+      
+        <content type="html"><![CDATA[<h2 id="博客源文件同步"><a href="#博客源文件同步" class="headerlink" title="博客源文件同步"></a>博客源文件同步</h2><p>在博客根目录执行</p><pre><code>git initgit remote add origin git@github.com:fxxsj/fxxsj.github.io.git  # 添加远程仓库 注意这里要添加你自己的仓库 fxxsj 换成你自己的用户名git checkout -b hexo            # 新建hexo分支并切换到hexo分支git add .              # 所有变化提交到暂存区git commit -m &quot;解决同步问题&quot;  # 提交文件git push origin hexo   # 推送hexo分支</code></pre><p>这就成功了，github上已经有博客的源文件了。</p><p>推荐把hexo设置为默认分支。</p><h2 id="git-submodule-实现第三方主题同步"><a href="#git-submodule-实现第三方主题同步" class="headerlink" title="git submodule 实现第三方主题同步"></a>git submodule 实现第三方主题同步</h2><p>因为之前是直接把第三方主题克隆到博客目录，有什么改动是无法推送到作者Git仓库的，这个时候需要把第三方主题的项目Fork到自己仓库，自己账号下生成一个同名的仓库，并对应一个url，我们应该git clone自己账号下仓库的url。</p><p>Fork第三方主题</p><p>执行如下操作。</p><pre><code>git submodule add git@github.com:fxxsj/hexo-theme-argon.git themes/argon</code></pre><p>把自己仓库下面第三方主题添加到Git子模块。</p><p><code>注 : themes/argon 这里的目录是因为我用的argon主题才会写themes/argon 如果你用的不是argon,请把argon替换成你的第三方主题文件夹名字。</code></p><p>博客的根目录会多一个.gitmodules文件,这是一个配置文件，保存了项目 URL 和你拉取到的本地子目录。<br>.gitmodules文件</p><p>这就添加成功了，然后执行如下操作。</p><pre><code>git add .              # 所有变化提交到暂存区git commit -m &quot;添加第三方主题Git子模块&quot;  # 提交文件git push origin hexo   # 推送hexo分支</code></pre><h2 id="更换电脑同步博客和第三方主题"><a href="#更换电脑同步博客和第三方主题" class="headerlink" title="更换电脑同步博客和第三方主题"></a>更换电脑同步博客和第三方主题</h2><h3 id="同步博客"><a href="#同步博客" class="headerlink" title="同步博客"></a>同步博客</h3><p>电脑上一定要先node和git，执行如下操作。</p><pre><code>npm install hexo-cli -g  # 先安装hexo的脚手架git clone git@github.com:fxxsj/fxxsj.github.io.git  # 下载项目，因为hexo 是默认分支，所以这里直接会下载hexo分支npm i # 安装依赖hexo s # 启动服务器</code></pre><p>剩下的就自行操作了。博客已经完成了同步。</p><p>注：每次写完文章部署网站后，记得再执行如下操作。</p><pre><code>git add .             # 所有变化提交到暂存区git commit -m &quot;新增xxx文章&quot;      # 提交文件git push origin hexo           # 推送hexo分支</code></pre><h3 id="同步第三方主题"><a href="#同步第三方主题" class="headerlink" title="同步第三方主题"></a>同步第三方主题</h3><p>在博客根目录执行如下操作。</p><pre><code>git submodule init    # 初始化本地配置文件git submodule update    # 拉取子模块</code></pre><p>如果第三方主题有修改的，修改完成后在第三方主题目录执行。</p><pre><code>git add .             # 所有变化提交到暂存区git commit -m &quot;修改主题xxxx&quot;      # 提交文件git push origin master       # 推送master分支</code></pre><p>这样就会把修改的主题推送到自己的仓库。</p><p>修改的主题推送到自己的仓库</p><p>这样就实现多端同步了。</p><h2 id="版权声明"><a href="#版权声明" class="headerlink" title="版权声明"></a>版权声明</h2><blockquote><p>本文转载自<a href="https://segmentfault.com/a/1190000019459014">lanpangzhi</a>。</p><p>感谢原作者，以及开源世界。</p></blockquote>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> 学习 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
   
   
 </search>
