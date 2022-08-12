@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+
+<html class="article-header-style-default">
+<head>
+	
+	<title>使用EH Forwarder Bot实现Telegram同时收发多个微信/QQ消息 - 南辰飞的自言自语</title>
+	<meta charset="utf-8">
+	
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	
+	<meta name="description" content="说明：EH Forwarder Bot是一个可扩展的聊天隧道框架，允许用户一次发送和接收来自多个IM平台的消息，并最终远程管理他们的帐户，目前可以实现的Telegram收发QQ、微信、Facebook Messenger等消息，你也可以同时一起收发N个微信、N个QQ等，这里就说下Telegram收发微信&#x2F;QQ消息的手动安装及Docker安装。 收发微信项目地址：https:&#x2F;&#x2F;githu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用EH Forwarder Bot实现Telegram同时收发多个微信&#x2F;QQ消息">
+<meta property="og:url" content="https://fxxsj.github.io/2019/07/05/%E4%BD%BF%E7%94%A8EH-Forwarder-Bot%E5%AE%9E%E7%8E%B0Telegram%E5%90%8C%E6%97%B6%E6%94%B6%E5%8F%91%E5%A4%9A%E4%B8%AA%E5%BE%AE%E4%BF%A1-QQ%E6%B6%88%E6%81%AF/index.html">
+<meta property="og:site_name" content="南辰飞的自言自语">
+<meta property="og:description" content="说明：EH Forwarder Bot是一个可扩展的聊天隧道框架，允许用户一次发送和接收来自多个IM平台的消息，并最终远程管理他们的帐户，目前可以实现的Telegram收发QQ、微信、Facebook Messenger等消息，你也可以同时一起收发N个微信、N个QQ等，这里就说下Telegram收发微信&#x2F;QQ消息的手动安装及Docker安装。 收发微信项目地址：https:&#x2F;&#x2F;githu">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-07-05T06:40:26.000Z">
+<meta property="article:modified_time" content="2022-07-29T00:28:35.431Z">
+<meta property="article:author" content="南辰飞">
+<meta property="article:tag" content="教程">
+<meta name="twitter:card" content="summary">
+
+	<meta name="theme-color" content="#5e72e4">
+	<meta name="theme-color-rgb" content="94,114,228">
+	<meta name="theme-color-origin" content="#5e72e4">
+	<meta name="argon-enable-custom-theme-color" content="true">
+	<meta name="theme-card-radius" content="4">
+	<meta name="theme-version" content="1.0.2">
+	<link rel="icon" href="/assets/img/favicon.ico" type="image/x-icon">
+	<link rel="shortcut icon" href="/assets/img/favicon.ico" type="image/x-icon">
+
+	
+<link rel="stylesheet" href="/assets/argon_css_merged.css">
+
+	
+<link rel="stylesheet" href="/style.css">
+
+	
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Open+Sans:300,400,600,700|Noto+Serif+SC:300,600&display=swap.css">
+
+	
+<script src="/assets/argon_js_merged.js"></script>
+
+	
+<script src="/assets/js/argon.min.js"></script>
+
+	
+<script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+	
+
+	<script>
+		var argonConfig = {
+			language: "zh_CN",
+			
+				zoomify: {
+					duration: 200,
+					easing: "cubic-bezier(0.4,0,0,1)",
+					scale: 0.9
+				},
+			
+			pangu: "false",
+			
+				lazyload: {
+					threshold: 800,
+					effect: "fadeIn"
+				},
+			
+			disable_pjax: false,
+			headroom: false
+		}
+	</script>
+	<script>
+		var darkmodeAutoSwitch = "false";
+		function setDarkmode(enable){
+			if (enable == true){
+				$("html").addClass("darkmode");
+			}else{
+				$("html").removeClass("darkmode");
+			}
+			$(window).trigger("scroll");
+		}
+		function toggleDarkmode(){
+			if ($("html").hasClass("darkmode")){
+				setDarkmode(false);
+				sessionStorage.setItem("Argon_Enable_Dark_Mode", "false");
+			}else{
+				setDarkmode(true);
+				sessionStorage.setItem("Argon_Enable_Dark_Mode", "true");
+			}
+		}
+		if (sessionStorage.getItem("Argon_Enable_Dark_Mode") == "true"){
+			setDarkmode(true);
+		}
+		function toggleDarkmodeByPrefersColorScheme(media){
+			if (sessionStorage.getItem('Argon_Enable_Dark_Mode') == "false" || sessionStorage.getItem('Argon_Enable_Dark_Mode') == "true"){
+				return;
+			}
+			if (media.matches){
+				setDarkmode(true);
+			}else{
+				setDarkmode(false);
+			}
+		}
+		function toggleDarkmodeByTime(){
+			if (sessionStorage.getItem('Argon_Enable_Dark_Mode') == "false" || sessionStorage.getItem('Argon_Enable_Dark_Mode') == "true"){
+				return;
+			}
+			let hour = new Date().getHours();
+			if (hour < 7 || hour >= 22){
+				setDarkmode(true);
+			}else{
+				setDarkmode(false);
+			}
+		}
+		if (darkmodeAutoSwitch == 'system'){
+			var darkmodeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+			darkmodeMediaQuery.addListener(toggleDarkmodeByPrefersColorScheme);
+			toggleDarkmodeByPrefersColorScheme(darkmodeMediaQuery);
+		}
+		if (darkmodeAutoSwitch == 'time'){
+			toggleDarkmodeByTime();
+		}
+		if (darkmodeAutoSwitch == 'alwayson'){
+			setDarkmode(true);
+		}
+
+		function toggleAmoledDarkMode(){
+			$("html").toggleClass("amoled-dark");
+			if ($("html").hasClass("amoled-dark")){
+				localStorage.setItem("Argon_Enable_Amoled_Dark_Mode", "true");
+			}else{
+				localStorage.setItem("Argon_Enable_Amoled_Dark_Mode", "false");
+			}
+		}
+		if (localStorage.getItem("Argon_Enable_Amoled_Dark_Mode") == "true"){
+			$("html").addClass("amoled-dark");
+		}else if (localStorage.getItem("Argon_Enable_Amoled_Dark_Mode") == "false"){
+			$("html").removeClass("amoled-dark");
+		}
+	</script>
+	<script>
+		if (navigator.userAgent.indexOf("Safari") !== -1 && navigator.userAgent.indexOf("Chrome") === -1){
+			$("html").addClass("using-safari");
+		}
+	</script>
+
+	
+		
+<script src="/assets/vendor/smoothscroll/smoothscroll1.js"></script>
+
+	
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+
+<style id="themecolor_css">
+	
+	:root{
+		--themecolor: #5e72e4;
+		--themecolor-dark0: #5368E2;
+		--themecolor-dark: #485FE0;
+		--themecolor-dark2: #324CDD;
+		--themecolor-dark3: #233DD2;
+		--themecolor-light: #8A98EB;
+		--themecolor-rgbstr: 94,114,228;
+		--themecolor-gradient: linear-gradient(150deg,var(--themecolor-light) 15%, var(--themecolor) 70%, var(--themecolor-dark0) 94%);
+
+	}
+</style>
+<style id="theme_cardradius_css">
+	:root{
+		--card-radius: 4px;
+	}
+</style>
+
+<body>
+<div id="toolbar">
+	<header class="header-global">
+		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-transparent navbar-light bg-primary headroom--not-bottom headroom--not-top headroom--pinned">
+			<div class="container">
+				
+				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar_global" aria-controls="navbar_global" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<a class="navbar-brand" href="/">南辰飞的自言自语</a>
+				<div class="navbar-collapse collapse" id="navbar_global">
+					<div class="navbar-collapse-header">
+						<div class="row">
+							<div class="col-6 collapse-brand"></div>
+							<div class="col-6 collapse-close">
+								<button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar_global" aria-controls="navbar_global" aria-expanded="false" aria-label="Toggle navigation">
+									<span></span>
+									<span></span>
+								</button>
+							</div>
+						</div>
+					</div>
+					<ul id="navbar_search_btn_mobile" class="navbar-nav align-items-lg-center ml-lg-auto">
+						<li class="nav-item" data-toggle="modal" data-target="#argon_search_modal" style="padding-left: 5px;">
+							<a class="nav-link nav-link-icon">
+								<i class="fa fa-search"></i>
+								<span class="nav-link-inner--text d-lg-none">搜索</span>
+							</a>
+						</li>
+					</ul>
+					
+							<ul class='navbar-nav navbar-nav-hover align-items-lg-center'>
+								
+										<li class='nav-item'>
+											<a href='/about' class='nav-link' >
+												<i class='ni ni-book-bookmark d-lg-none'></i>
+												<span class='nav-link-inner--text'>关于我</span>
+											</a>
+											
+										</li>
+									
+							</ul>
+						
+					<ul class="navbar-nav align-items-lg-center ml-lg-auto">
+						<li class="nav-item" data-toggle="modal" data-target="#argon_search_modal" id="navbar_search_btn_pc">
+							<a class="nav-link nav-link-icon">
+								<i class="fa fa-search"></i>
+								<span class="nav-link-inner--text d-lg-none">搜索</span>
+							</a>
+						</li>
+					</ul>
+				</div>
+				
+				<div id="navbar_menu_mask" data-toggle="collapse" data-target="#navbar_global"></div>
+			</div>
+		</nav>
+	</header>
+</div>
+<div class="modal fade" id="argon_search_modal" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">搜索</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<!-- TODO -->
+<div class="form-group mb-3">
+	<div class="input-group input-group-alternative">
+		<div class="input-group-prepend">
+			<span class="input-group-text"><i class="fa fa-search"></i></span>
+		</div>
+		<input id="local-search-input" class="form-control" placeholder="搜索什么..." type="text"  autocomplete="off" data-search.path="search.xml" data-config.root="/">
+	</div>
+	<div id="local-search-result"></div>
+</div>
+
+			</div>
+		</div>
+	</div>
+</div>
+<!--Banner-->
+<section id="banner" class="banner section section-lg section-shaped">
+	<div class="shape shape-style-1 shape-primary">
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+	</div>
+
+	
+	<div id="banner_container" class="banner-container container text-center">
+		
+			<div class="banner-title text-white"><span class="banner-title-inner">南辰飞的自言自语</span>
+		
+		</div>
+	</div>
+	
+		<style>
+			section.banner{
+				background-image: url(/assets/img/banner.jpg) !important;
+			}
+		</style>
+	
+</section>
+
+
+	<style>
+		#content:before {
+			content: '';
+			display: block;
+			position: fixed;
+			left: 0;
+			right: 0;
+			top: 0;
+			bottom: 0;
+			z-index: -2;
+			background: url(/assets/img/banner.jpg);
+			background-position: center;
+			background-size: cover;
+			background-repeat: no-repeat;
+			opacity: 1;
+			transition: opacity .5s ease;
+		}
+		html.darkmode #content:before{
+			filter: brightness(0.65);
+		}
+		
+			#content:after {
+				content: '';
+				display: block;
+				position: fixed;
+				left: 0;
+				right: 0;
+				top: 0;
+				bottom: 0;
+				z-index: -2;
+				background: url(/assets/img/banner.jpg);
+				background-position: center;
+				background-size: cover;
+				background-repeat: no-repeat;
+				opacity: 0;
+				transition: opacity .5s ease;
+			}
+			html.darkmode #content:after {
+				opacity: 1;
+			}
+			html.darkmode #content:before {
+				opacity: 0;
+			}
+		
+		
+			#banner, #banner .shape {
+				background: transparent !important;
+			}
+		
+	</style>
+
+
+
+
+<div id="float_action_buttons" class="float-action-buttons fabtns-unloaded">
+	<button id="fabtn_toggle_sides" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button" aria-hidden="true" tooltip-move-to-left="移至左侧" tooltip-move-to-right="移至右侧">
+		<span class="btn-inner--icon fabtn-show-on-right"><i class="fa fa-caret-left"></i></span>
+		<span class="btn-inner--icon fabtn-show-on-left"><i class="fa fa-caret-right"></i></span>
+	</button>
+	<button id="fabtn_back_to_top" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button" aria-label="Back To Top" tooltip="回到顶部">
+		<span class="btn-inner--icon"><i class="fa fa-angle-up"></i></span>
+	</button>
+	<button id="fabtn_go_to_comment" class="btn btn-icon btn-neutral fabtn shadow-sm d-none" type="button" <-% theme.fab_show_gotocomment_button ? "" : "style='display: none;'"  aria-label="Comment" tooltip="评论">
+		<span class="btn-inner--icon"><i class="fa fa-comment-o"></i></span>
+	</button>
+	<button id="fabtn_toggle_darkmode" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button" <-% theme.fab_show_darkmode_button ? "" : "style='display: none;'"  aria-label="Toggle Darkmode" tooltip-darkmode="夜间模式" tooltip-blackmode="暗黑模式" tooltip-lightmode="日间模式">
+		<span class="btn-inner--icon"><i class="fa fa-moon-o"></i><i class='fa fa-lightbulb-o'></i></span>
+	</button>
+	<button id="fabtn_toggle_blog_settings_popup" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button" <-% theme.fab_show_settings_button ? "" : "style='display: none;'"  aria-label="Open Blog Settings Menu" tooltip="设置">
+		<span class="btn-inner--icon"><i class="fa fa-cog"></i></span>
+	</button>
+	<div id="fabtn_blog_settings_popup" class="card shadow-sm" style="opacity: 0;" aria-hidden="true">
+		<div id="close_blog_settings"><i class="fa fa-close"></i></div>
+		<div class="blog-setting-item mt-3">
+			<div style="transform: translateY(-4px);"><div id="blog_setting_toggle_darkmode_and_amoledarkmode" tooltip-switch-to-darkmode="切换到夜间模式" tooltip-switch-to-blackmode="切换到暗黑模式"><span>夜间模式</span><span>暗黑模式</span></div></div>
+			<div style="flex: 1;"></div>
+			<label id="blog_setting_darkmode_switch" class="custom-toggle">
+				<span class="custom-toggle-slider rounded-circle"></span>
+			</label>
+		</div>
+		<div class="blog-setting-item mt-3">
+			<div style="flex: 1;">字体</div>
+			<div>
+				<button id="blog_setting_font_sans_serif" type="button" class="blog-setting-font btn btn-outline-primary blog-setting-selector-left">Sans Serif</button><button id="blog_setting_font_serif" type="button" class="blog-setting-font btn btn-outline-primary blog-setting-selector-right">Serif</button>
+			</div>
+		</div>
+		<div class="blog-setting-item mt-3">
+			<div style="flex: 1;">阴影</div>
+			<div>
+				<button id="blog_setting_shadow_small" type="button" class="blog-setting-shadow btn btn-outline-primary blog-setting-selector-left">浅阴影</button><button id="blog_setting_shadow_big" type="button" class="blog-setting-shadow btn btn-outline-primary blog-setting-selector-right">深阴影</button>
+			</div>
+		</div>
+		<div class="blog-setting-item mt-3 mb-3">
+			<div style="flex: 1;">滤镜</div>
+			<div id="blog_setting_filters" class="ml-3">
+				<button id="blog_setting_filter_off" type="button" class="blog-setting-filter-btn ml-0" filter-name="off">关闭</button>
+				<button id="blog_setting_filter_sunset" type="button" class="blog-setting-filter-btn" filter-name="sunset">日落</button>
+				<button id="blog_setting_filter_darkness" type="button" class="blog-setting-filter-btn" filter-name="darkness">暗化</button>
+				<button id="blog_setting_filter_grayscale" type="button" class="blog-setting-filter-btn" filter-name="grayscale">灰度</button>
+			</div>
+		</div>
+		<div class="blog-setting-item mb-3">
+			<div id="blog_setting_card_radius_to_default" style="cursor: pointer;" tooltip="恢复默认">圆角</div>
+			<div style="flex: 1;margin-left: 20px;margin-right: 8px;transform: translateY(2px);">
+				<div id="blog_setting_card_radius"></div>
+			</div>
+		</div>
+		
+			<div class="blog-setting-item mt-1 mb-3">
+				<div style="flex: 1;">主题色</div>
+				<div id="theme-color-picker" class="ml-3"></div>
+			</div>
+		
+	</div>
+	<button id="fabtn_open_sidebar" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button" aria-label="Open Sidebar Menu" tooltip="菜单">
+		<span class="btn-inner--icon"><i class="fa fa-bars"></i></span>
+	</button>
+	<button id="fabtn_reading_progress" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button" aria-hidden="true" tooltip="阅读进度">
+		<div id="fabtn_reading_progress_bar" style="width: 0%;"></div>
+		<span id="fabtn_reading_progress_details">0%</span>
+	</button>
+</div>
+
+<div id="content" class="site-content">
+
+
+
+
+
+
+
+
+
+<div class="page-information-card-container">
+	
+</div>
+
+<div id="sidebar_mask"></div>
+<aside id="leftbar" class="leftbar widget-area" role="complementary">
+		
+		<div id="leftbar_part1" class="widget widget_search card bg-white shadow-sm border-0">
+			<div class="leftbar-banner card-body">
+				<span class="leftbar-banner-title text-white">南辰飞的自言自语</span>
+				
+				
+			</div>
+			
+			
+				<ul id='leftbar_part1_menu' class='leftbar-menu'>
+					<li class='leftbar-menu-item'><a href='/'>首页</a></li><li class='leftbar-menu-item'><a href='/archives'>归档</a></li>
+				</ul>
+			
+			<div class="card-body text-center leftbar-search-button">
+				<button id="leftbar_search" class="btn btn-secondary btn-lg active btn-sm btn-block border-0" role="button" data-toggle="modal" data-target="#argon_search_modal" >
+					<i class="menu-item-icon fa fa-search mr-0"></i> 搜索
+				</button>
+			</div>
+		</div>
+		<div id="leftbar_part2" class="widget widget_search card bg-white shadow-sm border-0">
+			<div id="leftbar_part2_inner" class="card-body">
+				
+				<div class="nav-wrapper" style="padding-top: 5px;">
+	                <ul class="nav nav-pills nav-fill" role="tablist">
+						
+							<li class="nav-item sidebar-tab-switcher">
+								<a class="active show" id="leftbar_tab_catalog_btn" data-toggle="tab" href="#leftbar_tab_catalog" role="tab" aria-controls="leftbar_tab_catalog" no-pjax>文章目录</a>
+							</li>
+						
+						<li class="nav-item sidebar-tab-switcher">
+							<a class="" id="leftbar_tab_overview_btn" data-toggle="tab" href="#leftbar_tab_overview" role="tab" aria-controls="leftbar_tab_overview" no-pjax>站点概览</a>
+						</li>
+	                </ul>
+				</div>
+				<div>
+					<div class="tab-content" style="padding: 10px 10px 0 10px;">
+						
+							<div class="tab-pane fade active show" id="leftbar_tab_catalog" role="tabpanel" aria-labelledby="leftbar_tab_catalog_btn">
+								<div id="leftbar_catalog"></div>
+								<script type="text/javascript">
+									$(function () {
+										$(document).headIndex({
+											articleWrapSelector: '#post_content',
+											indexBoxSelector: '#leftbar_catalog',
+											subItemBoxClass: "index-subItem-box",
+											itemClass: "index-item",
+											linkClass: "index-link",
+											offset: 80,
+										});
+									})
+								</script>
+								
+							</div>
+						
+						<div class="tab-pane fade text-center" id="leftbar_tab_overview" role="tabpanel" aria-labelledby="leftbar_tab_overview_btn">
+							<img id="leftbar_overview_author_image" src="/assets/img/auther.jpg" class="img-fluid rounded-circle shadow-sm" style="width: 100px;" alt="avatar">
+							<h6 id="leftbar_overview_author_name">南辰飞的自言自语</h6>
+							<nav class="site-state">
+								<div class="site-state-item site-state-posts">
+									<a href="/archives">
+										<span class="site-state-item-count">4</span>
+										<span class="site-state-item-name">文章</span>
+									</a>
+								</div>
+								<div class="site-state-item site-state-categories">
+									<a data-toggle="modal" data-target="#blog_categories">
+										<span class="site-state-item-count">1</span>
+										<span class="site-state-item-name">分类</span>
+									</a>
+								</div>      
+								<div class="site-state-item site-state-tags">
+									<a data-toggle="modal" data-target="#blog_tags">
+										<span class="site-state-item-count">3</span>
+										<span class="site-state-item-name">标签</span>
+									</a>
+								</div>
+							</nav>
+							
+									<div class="site-author-links">
+										
+									</div>
+								
+							
+									<div class='site-friend-links'>
+										<div class='site-friend-links-title'><i class='fa fa-fw fa-link'></i> Links</div>
+										<ul class='site-friend-links-ul'>
+											
+										</ul>
+									</div>
+								
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+</aside>
+<div class="modal fade" id="blog_categories" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">分类</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<a class="badge badge-secondary tag" href="/categories/%E5%AD%A6%E4%B9%A0/" rel="tag">学习 <span class="tag-num">4</span></a>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="blog_tags" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">标签</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<a class="badge badge-secondary tag" href="/tags/Markdown/" rel="tag">Markdown <span class="tag-num">1</span></a><a class="badge badge-secondary tag" href="/tags/hexo/" rel="tag">hexo <span class="tag-num">2</span></a><a class="badge badge-secondary tag" href="/tags/%E6%95%99%E7%A8%8B/" rel="tag">教程 <span class="tag-num">1</span></a>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<div id="primary" class="content-area">
+	<main id="main" class="site-main" role="main">
+		
+		
+			
+	<article class="post post-full card bg-white shadow-sm border-0 ">
+	<header class="post-header text-center">
+		
+		<a class="post-title" href="/2019/07/05/%E4%BD%BF%E7%94%A8EH-Forwarder-Bot%E5%AE%9E%E7%8E%B0Telegram%E5%90%8C%E6%97%B6%E6%94%B6%E5%8F%91%E5%A4%9A%E4%B8%AA%E5%BE%AE%E4%BF%A1-QQ%E6%B6%88%E6%81%AF/">使用EH Forwarder Bot实现Telegram同时收发多个微信/QQ消息</a>
+		<div class="post-meta">
+			
+						
+						<div class="post-meta-detail post-meta-detail-time">
+							<i class="fa fa-clock-o" aria-hidden="true"></i>
+							<time title="发布于 2019-7-5 14:40:26 | 编辑于 2022-7-29 8:28:35">2019-7-5 14:40
+							</time>
+						</div>
+					
+						
+							<div class="post-meta-devide">|</div>
+						
+						<div class="post-meta-detail post-meta-detail-categories">
+							<i class="fa fa-bookmark-o" aria-hidden="true"></i>
+							<a class="post-meta-detail-catagory-link" href="/categories/%E5%AD%A6%E4%B9%A0/">学习</a>
+						</div>
+					
+						
+							<div class="post-meta-devide">|</div>
+						
+						<div class="post-meta-detail post-meta-detail-words">
+							<i class="fa fa fa-book" aria-hidden="true"></i>
+							<span id="busuanzi_container_page_pv">
+								阅读<span id="busuanzi_value_page_pv"></span>次
+							</span>
+						</div>
+					
+						
+							<div class="post-meta-devide">|</div>
+						
+						<div class="post-meta-detail post-meta-detail-words">
+							<i class="fa fa-file-word-o" aria-hidden="true"></i>
+							2.2k 字
+						</div>
+					
+						
+							<div class="post-meta-devide">|</div>
+						
+						<div class="post-meta-detail post-meta-detail-readingtime">
+							<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+							9 分钟
+						</div>
+					
+		</div>
+		
+	</header>
+
+	<div class="post-content" id="post_content">
+		<h3 id="说明："><a href="#说明：" class="headerlink" title="说明："></a>说明：</h3><p><code>EH Forwarder Bot</code>是一个可扩展的聊天隧道框架，允许用户一次发送和接收来自多个<code>IM</code>平台的消息，并最终远程管理他们的帐户，目前可以实现的<code>Telegram</code>收发<code>QQ</code>、微信、<code>Facebook Messenger</code>等消息，你也可以同时一起收发<code>N</code>个微信、<code>N</code>个<code>QQ</code>等，这里就说下<code>Telegram</code>收发微信&#x2F;<code>QQ</code>消息的手动安装及<code>Docker</code>安装。</p>
+<h3 id="收发微信"><a href="#收发微信" class="headerlink" title="收发微信"></a>收发微信</h3><p><strong>项目地址：</strong><a target="_blank" rel="noopener" href="https://github.com/blueset/ehForwarderBot">https://github.com/blueset/ehForwarderBot</a></p>
+<p>所使用的模块地址：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#Telegram模块</span><br><span class="line">https://github.com/blueset/efb-telegram-master</span><br><span class="line">#微信模块</span><br><span class="line">https://github.com/blueset/efb-wechat-slave</span><br></pre></td></tr></table></figure>
+
+<p>其他模块地址→<a target="_blank" rel="noopener" href="https://github.com/blueset/ehForwarderBot/wiki/Channels-Repository">传送门</a>，包括<code>Facebook Messenger</code>等模块，有兴趣的可以看下。</p>
+<p><strong>环境要求：</strong><code>Python 3.6+</code>、<code>EH Forwarder Bot 2.0+</code>、<code>ffmpeg</code>、<code>libmagic</code>、<code>libwebp</code></p>
+<p>手动教程适用于<code>Debian</code>、<code>CentOS</code>、<code>Ubuntu</code>，如果你想用<code>Ubuntu</code>的话，最好使用<code>18.04+</code>版本。</p>
+<h4 id="1、安装依赖"><a href="#1、安装依赖" class="headerlink" title="1、安装依赖"></a>1、安装依赖</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#CentOS系统</span><br><span class="line">yum install file-devel libwebp-tools git screen -y</span><br><span class="line"></span><br><span class="line">#Debian/Ubuntu系统</span><br><span class="line">apt install libwebp-dev libmagic-dev git screen -y</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、安装Python3-6"><a href="#2、安装Python3-6" class="headerlink" title="2、安装Python3.6"></a>2、安装Python3.6</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#CentOS系统</span><br><span class="line">wget https://www.moerats.com/usr/shell/Python3/CentOS_Python3.6.sh &amp;&amp; sh CentOS_Python3.6.sh</span><br><span class="line">#Debian系统</span><br><span class="line">wget https://www.moerats.com/usr/shell/Python3/Debian_Python3.6.sh &amp;&amp; sh Debian_Python3.6.sh</span><br><span class="line">#Ubuntu系统</span><br><span class="line">apt update</span><br><span class="line">apt install python3-pip python3-setuptools python3-dev -y</span><br></pre></td></tr></table></figure>
+
+<h4 id="3、安装ffmpeg"><a href="#3、安装ffmpeg" class="headerlink" title="3、安装ffmpeg"></a>3、安装ffmpeg</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#下载ffmpeg二进制</span><br><span class="line">wget https://www.moerats.com/usr/down/ffmpeg/ffmpeg-git-$(getconf LONG_BIT)bit-static.tar.xz</span><br><span class="line">#解压文件</span><br><span class="line">tar xvf ffmpeg-git-*-static.tar.xz</span><br><span class="line">#移动ffmpeg可执行文件</span><br><span class="line">mv ffmpeg-git-*/ffmpeg  ffmpeg-git-*/ffprobe /usr/bin/</span><br><span class="line">#删除文件</span><br><span class="line">rm -rf ffmpeg-git-*</span><br></pre></td></tr></table></figure>
+
+<h4 id="4、安装框架"><a href="#4、安装框架" class="headerlink" title="4、安装框架"></a>4、安装框架</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#安装稳定版</span><br><span class="line">pip3 install ehforwarderbot</span><br><span class="line"></span><br><span class="line">#安装开发版，建议安装开发版，bug修复快些，功能也新</span><br><span class="line">pip3 install git+https://github.com/blueset/ehforwarderbot.git</span><br></pre></td></tr></table></figure>
+
+<h4 id="5、安装TG和微信模块"><a href="#5、安装TG和微信模块" class="headerlink" title="5、安装TG和微信模块"></a>5、安装TG和微信模块</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip3 install efb-telegram-master efb-wechat-slave</span><br></pre></td></tr></table></figure>
+
+<h4 id="6、启用模块"><a href="#6、启用模块" class="headerlink" title="6、启用模块"></a>6、启用模块</h4><p>先新建配置文件夹和配置文件<code>config.yaml</code>，使用命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#default为配置文件默认的文件夹，你也可以命名为其它的，不会玩的就默认</span><br><span class="line">mkdir -p ~/.ehforwarderbot/profiles/default</span><br><span class="line">nano ~/.ehforwarderbot/profiles/default/config.yaml</span><br></pre></td></tr></table></figure>
+
+<p>参考代码为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#请根据实际情况修改</span><br><span class="line">master_channel: foo.demo_master</span><br><span class="line">slave_channels:</span><br><span class="line">- foo.demo_slave</span><br><span class="line">- bar.dummy</span><br><span class="line">middlewares:</span><br><span class="line">- foo.null</span><br></pre></td></tr></table></figure>
+
+<p>以上对应的均为模块名称，模块参考→<a target="_blank" rel="noopener" href="https://github.com/blueset/ehForwarderBot/wiki/Channels-Repository">传送门</a>，比如这里博主只用了<code>Telegram</code>和<code>WeChat</code>模块，所以大致配置为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">master_channel: blueset.telegram</span><br><span class="line">slave_channels:</span><br><span class="line">- blueset.wechat</span><br></pre></td></tr></table></figure>
+
+<p>然后使用<code>Ctrl+x</code>、<code>y</code>保存退出。</p>
+<p>这只是登录一个微信号，如果你要同时登录多个微信号，那么配置文件就需要改为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#比如我要同时登录并收发3个微信号</span><br><span class="line">master_channel: blueset.telegram</span><br><span class="line">slave_channels:</span><br><span class="line">- blueset.wechat</span><br><span class="line">- blueset.wechat#moe123</span><br><span class="line">- blueset.wechat#rats321</span><br></pre></td></tr></table></figure>
+
+<p>只需要在后面使用<code>#</code>指定一个<code>ID</code>号，该<code>ID</code>号只能有字母，数字和下划线，即正则表达式<code>[a-zA-Z0-9_]+</code>，想登录几个账户就加几个。如果你使用<code>QQ</code>、<code>Facebook Messenger</code>模块的话，设置方法也一样。</p>
+<h4 id="7、建立TG配置文件"><a href="#7、建立TG配置文件" class="headerlink" title="7、建立TG配置文件"></a>7、建立TG配置文件</h4><p>建立配置文件前需要先获取<code>Telegram</code>的<code>Token</code>和<code>Userid</code>，获取方法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#Telegram的Token获取</span><br><span class="line">1、在Telegram关注@BotFather</span><br><span class="line">2、再到对话框依次输入：/start=&gt;/newbot，然后会要你给机器人命名(如：MoeratsBot)，命名完成会给你一个Token。</span><br><span class="line"></span><br><span class="line">#Telegram群Userid获取</span><br><span class="line">1、先和你的机器人聊天，随便发一句话。</span><br><span class="line">2、在浏览器输入https://api.telegram.org/botxx:xx/getUpdates(其中xx:xx为Token)，然后chat后面的id即为你的userid。</span><br></pre></td></tr></table></figure>
+
+<p>再新建一个<code>Telegram</code>模块配置文件夹和配置文件<code>config.yaml</code>，使用命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#同样的也建在default文件夹，如果你上面更改了default文件夹，那这里也要更改</span><br><span class="line">mkdir ~/.ehforwarderbot/profiles/default/blueset.telegram</span><br><span class="line">nano ~/.ehforwarderbot/profiles/default/blueset.telegram/config.yaml</span><br></pre></td></tr></table></figure>
+
+<p>填入以下代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">token: &quot;12345:moerats&quot; </span><br><span class="line">admins:</span><br><span class="line">- 765432 </span><br></pre></td></tr></table></figure>
+
+<p>然后使用<code>Ctrl+x</code>、<code>y</code>保存退出。上面所对应的参数分别为<code>Token</code>和<code>Userid</code>。关于<code>Telegram</code>模块的更多玩法可以参考→<a target="_blank" rel="noopener" href="https://github.com/blueset/efb-telegram-master">传送门</a>。</p>
+<h4 id="8、启动"><a href="#8、启动" class="headerlink" title="8、启动"></a>8、启动</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#该命令会默认从default文件夹读取信息，如果你之前建的是moerats文件夹，那命令应该为ehforwarderbot -p moerats</span><br><span class="line">ehforwarderbot</span><br></pre></td></tr></table></figure>
+
+<p>这时候会给一个微信二维码或者二维码链接你，放到浏览器打开扫描登录即可，如果你设置了同时登录多个账户，那设置几个就需要登录几个。</p>
+<p>然后使用<code>Ctrl+C</code>断开运行，再使用命令后台运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">screen -dmS EHF ehforwarderbot</span><br></pre></td></tr></table></figure>
+
+<p>最后你的微信消息会通过机器人发送给你，你也可以通过机器人将消息发送给指定好友。</p>
+<h3 id="收发QQ消息"><a href="#收发QQ消息" class="headerlink" title="收发QQ消息"></a>收发QQ消息</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">提示：这里随便提了下，了解下就行了，建议使用下面Docker方式安装。</span><br></pre></td></tr></table></figure>
+
+<p>所使用的模块地址：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#Telegram模块</span><br><span class="line">https://github.com/blueset/efb-telegram-master</span><br><span class="line">#QQ模块</span><br><span class="line">https://github.com/milkice233/efb-qq-slave</span><br></pre></td></tr></table></figure>
+
+<p>由于方法写的很大概，所以需要你把收发微信的方法看懂，这里<code>EH Forwarder Bot</code>只支持<code>酷Q</code>客户端，一般采用<code>Docker</code>的方法在<code>Linux</code>上安装酷<code>Q</code>，方法很久以前就说过了，参考→<a target="_blank" rel="noopener" href="https://www.moerats.com/archives/802/">传送门</a>，不过启动命令变了下，也就是安装<code>wine-coolq</code>的命令。</p>
+<h4 id="安装TG和QQ模块："><a href="#安装TG和QQ模块：" class="headerlink" title="安装TG和QQ模块："></a>安装<code>TG</code>和<code>QQ</code>模块：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip3 install efb-telegram-master efb-qq-slave</span><br></pre></td></tr></table></figure>
+
+<h4 id="安装wine-coolq："><a href="#安装wine-coolq：" class="headerlink" title="安装wine-coolq："></a>安装<code>wine-coolq</code>：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">mkdir coolq  #包含CoolQ程序文件</span><br><span class="line">docker run -ti --rm --name cqhttp-test --net=&quot;host&quot; \</span><br><span class="line">     -v $(pwd)/coolq:/home/user/coolq     `#mount coolq folder` \</span><br><span class="line">     -p 9000:9000                         `#网页noVNC端口` \</span><br><span class="line">     -p 5700:5700                         `#酷Q对外提供的API接口的端口` \</span><br><span class="line">     -e VNC_PASSWD=MAX8char               `#请修改VNC密码！！！！` \</span><br><span class="line">     -e COOLQ_PORT=5700                   `#酷Q对外提供的API接口的端口` \</span><br><span class="line">     -e COOLQ_ACCOUNT=123456              `#在此输入要登录的QQ号，虽然可选但是建议填入` \</span><br><span class="line">     -e CQHTTP_POST_URL=http://127.0.0.1:8000   `#efb-qq-slave监听的端口/地址用于接受传入的消息` \</span><br><span class="line">     -e CQHTTP_SERVE_DATA_FILES=yes       `#允许以HTTP方式访问酷Q数据文件` \</span><br><span class="line">     -e CQHTTP_ACCESS_TOKEN=ac0f790e1fb74ebcaf45da77a6f9de47  `#Access Token` \</span><br><span class="line">     -e CQHTTP_POST_MESSAGE_FORMAT=array  `# 回传消息时使用数组(必选)` \</span><br><span class="line">     richardchien/cqhttp:latest</span><br></pre></td></tr></table></figure>
+
+<p>然后使用<code>ip:9000</code>访问<code>noVNC</code>登录<code>酷Q</code>即可。</p>
+<h4 id="新建QQ模块配置文件："><a href="#新建QQ模块配置文件：" class="headerlink" title="新建QQ模块配置文件："></a>新建<code>QQ</code>模块配置文件：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir ~/.ehforwarderbot/profiles/default/milkice.qq</span><br><span class="line">nano ~/.ehforwarderbot/profiles/default/milkice.qq/config.yaml</span><br></pre></td></tr></table></figure>
+
+<p>填入的代码大致如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Client: CoolQ                         #指定要使用的QQ客户端（此处为CoolQ）</span><br><span class="line">CoolQ:</span><br><span class="line">    type: HTTP                        #指定efb-qq-slave与酷Q通信的方式 现阶段仅支持HTTP</span><br><span class="line">    access_token: ac0f790e1fb74ebcaf45da77a6f9de47</span><br><span class="line">    api_root: http://127.0.0.1:5700/  # 酷Q API接口地址/端口</span><br><span class="line">    host: 127.0.0.1                   # efb-qq-slave所监听的地址用于接收消息</span><br><span class="line">    port: 8000                        # 同上</span><br><span class="line">    is_pro: false                      # 若为酷Q Pro则为true，反之为false</span><br><span class="line">    air_option:                       # 包含于air_option的配置选项仅当is_pro为false时才有效</span><br><span class="line">        upload_to_smms: true          # 将来自EFB主端(通常是Telegram) 的图片上传到sm.ms服务器并以链接的形式发送到QQ端</span><br></pre></td></tr></table></figure>
+
+<p>最后使用<code>ehforwarderbot</code>命令启动即可。</p>
+<h3 id="Docker安装"><a href="#Docker安装" class="headerlink" title="Docker安装"></a>Docker安装</h3><p>这里选择<code>2</code>个最新的<code>Docker</code>镜像，也是官方推荐的，项目地址：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#Telegram收发QQ消息</span><br><span class="line">https://github.com/Earth-Online/efb-qq-coolq-docker</span><br><span class="line">#Telegram收发微信消息</span><br><span class="line">https://www.github.com/Mikubill/efb-wechat-docker</span><br></pre></td></tr></table></figure>
+
+<h4 id="1、安装Docker"><a href="#1、安装Docker" class="headerlink" title="1、安装Docker"></a>1、安装Docker</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">#CentOS 6</span><br><span class="line">rpm -iUvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm</span><br><span class="line">yum update -y</span><br><span class="line">yum -y install docker-io</span><br><span class="line">service docker start</span><br><span class="line">chkconfig docker on</span><br><span class="line"></span><br><span class="line">#CentOS 7、Debian、Ubuntu</span><br><span class="line">curl -sSL https://get.docker.com/ | sh</span><br><span class="line">systemctl start docker</span><br><span class="line">systemctl enable docker</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、Telegram收发QQ消息"><a href="#2、Telegram收发QQ消息" class="headerlink" title="2、Telegram收发QQ消息"></a>2、Telegram收发QQ消息</h4><p>安装<code>docker-compose</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">curl -L https://github.com/docker/compose/releases/download/1.23.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose</span><br><span class="line">chmod +x /usr/local/bin/docker-compose</span><br><span class="line">#验证是否安装成功</span><br><span class="line">docker-compose --version</span><br><span class="line">#返回以下信息即安装成功</span><br><span class="line">docker-compose version 1.23.2, build 1110ad01</span><br></pre></td></tr></table></figure>
+
+<p>拉取<code>Docker</code>源码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/Earth-Online/efb-qq-coolq-docker.git</span><br><span class="line">cd efb-qq-coolq-docker</span><br><span class="line">#编辑config.yaml配置文件</span><br><span class="line">nano ehforward_config/profiles/default/blueset.telegram/config.yaml</span><br></pre></td></tr></table></figure>
+
+<p>修改如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#token和userid参数获取方法查看上面的手动安装教程</span><br><span class="line">token: &quot;你的TG机器人Token&quot;</span><br><span class="line">admins:</span><br><span class="line">- 你的Userid</span><br></pre></td></tr></table></figure>
+
+<p>然后再编辑<code>docker-compose.yml</code>文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nano docker-compose.yml</span><br></pre></td></tr></table></figure>
+
+<p>修改如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- VNC_PASSWD=你的密码</span><br><span class="line">- COOLQ_ACCOUNT=你的qq账号</span><br></pre></td></tr></table></figure>
+
+<p>后台启动：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#第一次启动会构建镜像，所以会慢点</span><br><span class="line">docker-compose up -d</span><br></pre></td></tr></table></figure>
+
+<p>然后打开<code>ip:9801</code>登陆<code>novnc</code>后完成<code>coolq</code>登陆操作。如果该地址打不开，请检查下防火墙。</p>
+<h4 id="3、Telegram收发微信消息"><a href="#3、Telegram收发微信消息" class="headerlink" title="3、Telegram收发微信消息"></a>3、Telegram收发微信消息</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#拉取源码</span><br><span class="line">git clone https://github.com/mikubill/efb-wechat-docker.git</span><br><span class="line">#构建镜像</span><br><span class="line">cd efb-wechat-docker &amp;&amp; docker build -t mikubill/efbwechat .</span><br><span class="line">#启动镜像，TOKEN为TG机器人Token、ADMIN为你的Userid，获取方法查看上面的手动安装教程</span><br><span class="line">docker run -d -t --name &quot;efbwechat&quot; -e TOKEN=xxxx -e ADMIN=xxxx mikubill/efbwechat</span><br></pre></td></tr></table></figure>
+
+<p>最后获取微信登录验证码，使用命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker logs -f efbwechat </span><br></pre></td></tr></table></figure>
+
+<p>扫描登录即可。</p>
+<p>最后这里都没有给微信添加额外的配置文件，直接使用默认的微信配置，如果想扩展微信功能的可以参考→<a target="_blank" rel="noopener" href="https://github.com/blueset/efb-wechat-slave#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E4%BE%8B">传送门</a>，不过由于模块使用的微信网页版，所以支持的功能是有限的，比如：没有朋友圈、不能发语音、位置等等，一般来说也够用了，至于<code>QQ</code>的话，功能肯定受<code>酷Q</code>限制，暂时不能处理好友请求处理，加群请求处理，语音发送&#x2F;接收等，对于<code>Facebook Messenger</code>模块的话，有需求的可以自己试试安装配置。</p>
+<h3 id="版权声明"><a href="#版权声明" class="headerlink" title="版权声明"></a>版权声明</h3><blockquote>
+<p>本文转载自<a target="_blank" rel="noopener" href="https://www.moerats.com/archives/931/">Rat’s Blog</a>。</p>
+<p>感谢原作者，以及开源世界。</p>
+</blockquote>
+
+	</div>
+
+	
+
+	
+
+	
+		<div class="post-tags">
+			<i class="fa fa-tags" aria-hidden="true"></i>
+			<a class="tag badge badge-secondary post-meta-detail-tag -none-link" href="/tags/%E6%95%99%E7%A8%8B/" rel="tag">教程</a>
+		</div>
+	
+</article>
+
+	<div id="share_container">
+	<div id="share" data-initialized="true">
+		<a class="no-pjax icon-wechat" tooltip="分享到微信">
+			<button class="btn btn-icon btn-success">
+				<span class="btn-inner--icon"><i class="fa fa-weixin"></i></span>
+			</button>
+		</a>
+		<a target="_blank" class="no-pjax icon-douban" tooltip="分享到豆瓣">
+			<button class="btn btn-icon btn-primary" style="background: #209261;border: none;">
+				豆
+			</button>
+		</a>
+		<a target="_blank" class="no-pjax icon-qq" tooltip="分享到 QQ">
+			<button class="btn btn-icon btn-primary" style="background: #2196f3;border: none;">
+				<span class="btn-inner--icon"><i class="fa fa-qq"></i></span>
+			</button>
+		</a>
+		<a target="_blank" class="no-pjax icon-qzone" tooltip="分享到 QQ 空间">
+			<button class="btn btn-icon btn-primary" style="background: #ffc107;border: none;">
+				<span class="btn-inner--icon"><i class="fa fa-star"></i></span>
+			</button>
+		</a>
+		<a target="_blank" class="no-pjax icon-weibo" tooltip="分享到微博">
+			<button class="btn btn-icon btn-warning">
+				<span class="btn-inner--icon"><i class="fa fa-weibo"></i></span>
+			</button>
+		</a>
+		<a target="_blank" class="no-pjax icon-facebook" tooltip="分享到 Facebook">
+			<button class="btn btn-icon btn-primary" style="background: #283593;border: none;">
+				<span class="btn-inner--icon"><i class="fa fa-facebook"></i></span>
+			</button>
+		</a>
+		<a target="_blank" class="no-pjax icon-twitter" tooltip="分享到 Twitter">
+			<button class="btn btn-icon btn-primary" style="background: #03a9f4;border: none;">
+				<span class="btn-inner--icon"><i class="fa fa-twitter"></i></span>
+			</button>
+		</a>
+		<a target="_blank" class="no-pjax icon-telegram" href="https://telegram.me/share/url?url=https://fxxsj.github.io/2019/07/05/%E4%BD%BF%E7%94%A8EH-Forwarder-Bot%E5%AE%9E%E7%8E%B0Telegram%E5%90%8C%E6%97%B6%E6%94%B6%E5%8F%91%E5%A4%9A%E4%B8%AA%E5%BE%AE%E4%BF%A1-QQ%E6%B6%88%E6%81%AF/&text=使用EH Forwarder Bot实现Telegram同时收发多个微信/QQ消息" tooltip="分享到 Telegram">
+			<button class="btn btn-icon btn-primary" style="background: #42a5f5;border: none;">
+				<span class="btn-inner--icon"><i class="fa fa-telegram"></i></span>
+			</button>
+		</a>
+		<a target="_blank" class="no-pjax icon-copy-link" id="share_copy_link" tooltip="复制链接">
+			<button class="btn btn-icon btn-default">
+				<span class="btn-inner--icon"><i class="fa fa-link"></i></span>
+			</button>
+		</a>
+	</div>
+	<button id="share_show" class="btn btn-icon btn-primary" tooltip="分享">
+		<span class="btn-inner--icon"><i class="fa fa-share"></i></span>
+	</button>
+</div>
+<script type="text/javascript">
+	socialShare("#share", {
+	    title : '使用EH Forwarder Bot实现Telegram同时收发多个微信/QQ消息',
+	    description : '说明：EH Forwarder Bot是一个可扩展的聊天隧道框架，允许用户一次发送和接收来自多个IM...',
+	    wechatQrcodeTitle : "分享到微信",
+	    wechatQrcodeHelper : '微信扫描二维码',
+	    source : 'https://fxxsj.github.io/2019/07/05/%E4%BD%BF%E7%94%A8EH-Forwarder-Bot%E5%AE%9E%E7%8E%B0Telegram%E5%90%8C%E6%97%B6%E6%94%B6%E5%8F%91%E5%A4%9A%E4%B8%AA%E5%BE%AE%E4%BF%A1-QQ%E6%B6%88%E6%81%AF/'
+	});
+	$("#share_show")[0].onclick = function(){
+		$("#share_container").addClass("opened");
+	};
+	$("#share_copy_link")[0].onclick = function(){
+		let input = document.createElement('input');
+		document.body.appendChild(input);
+		input.setAttribute("value", window.location.href);
+		input.setAttribute("readonly", "readonly");
+		input.setAttribute("style", "opacity: 0;mouse-events:none;");
+		input.select();
+		if (document.execCommand('copy')){
+			iziToast.show({
+				title: '链接已复制',
+				message: "链接已复制到剪贴板",
+				class: 'shadow',
+				position: 'topRight',
+				backgroundColor: '#2dce89',
+				titleColor: '#ffffff',
+				messageColor: '#ffffff',
+				iconColor: '#ffffff',
+				progressBarColor: '#ffffff',
+				icon: 'fa fa-check',
+				timeout: 5000
+			});
+		}else{
+			iziToast.show({
+				title: '复制失败',
+				message: "请手动复制链接",
+				class: 'shadow',
+				position: 'topRight',
+				backgroundColor: '#f5365c',
+				titleColor: '#ffffff',
+				messageColor: '#ffffff',
+				iconColor: '#ffffff',
+				progressBarColor: '#ffffff',
+				icon: 'fa fa-close',
+				timeout: 5000
+			});
+		}
+		document.body.removeChild(input);
+	};
+</script>
+
+
+
+
+
+<div class="post-navigation card shadow-sm"><div class="post-navigation-item post-navigation-pre"><span class="page-navigation-extra-text"><i class="fa fa-arrow-circle-o-left" aria-hidden="true"></i>上一篇</span><a href="/2022/07/27/hello-world/" rel="prev"> Hello World</a></div><div class="post-navigation-item post-navigation-next"><span class="page-navigation-extra-text">下一篇 <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i></span><a href="/2019/06/08/Markdown%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/" rel="next"> Markdown基本语法</a></div></div>
+
+
+
+
+		
+		
+		
+		
+
+					<footer id="footer" class="site-footer card shadow-sm border-0">
+						
+						<div>Theme <a target="_blank" rel="noopener" href="https://github.com/solstice23/hexo-theme-argon"><strong>Argon</strong></a> | Powered by Hexo</div>
+						<span id="busuanzi_container_site_uv">
+							本站访客数 <span id="busuanzi_value_site_uv"></span> 人次
+						</span>
+					</footer>
+				</main>
+			</div>
+		</div>
+		
+<script src="/argontheme.js"></script>
+
+		
+		
+		
+
+		
+
+	</div>
+</div>
+<noscript>
+	<style>
+		article img.lazyload[src^="data:image/svg+xml;base64,PCEtLUFyZ29uTG9hZGluZy0tPg"]{display: none;}
+		.comment-item-text .comment-sticker.lazyload{display: none;}
+	</style>
+</noscript>
+</body>
+
+
+
+</html>
+
